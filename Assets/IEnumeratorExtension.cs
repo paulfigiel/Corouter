@@ -80,4 +80,22 @@ public static class IEnumeratorExtension
                 yield return null;
         }
     }
+    public static IEnumerator Repeat(this IEnumerator baseEnum,System.Action action,int howMany,int iterationPerFrame = 1)
+    {
+        yield return baseEnum;
+        int i = 0, j = 0;
+        iterationPerFrame = Mathf.Min(iterationPerFrame, howMany);
+        while (i < howMany)
+        {
+            while(j<iterationPerFrame && i < howMany)
+            {
+                action();
+                j++;
+                i++;
+            }
+            j = 0;
+            if(i!= howMany)
+                yield return null;
+        }
+    }
 }
