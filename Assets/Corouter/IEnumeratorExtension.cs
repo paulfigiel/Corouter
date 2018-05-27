@@ -9,21 +9,6 @@ public static class IEnumeratorExtension
     {
         yield return null;
     }
-    public static IEnumerator Then(this IEnumerator baseEnum, System.Func<IEnumerator> enumerator)
-    {
-        yield return baseEnum;
-        yield return enumerator();
-    }
-    public static IEnumerator Then<T>(this IEnumerator baseEnum, System.Func<T, IEnumerator> enumerator, T obj1)
-    {
-        yield return baseEnum;
-        yield return enumerator(obj1);
-    }
-    public static IEnumerator Then(this IEnumerator baseEnum, System.Action action)
-    {
-        yield return baseEnum;
-        action();
-    }
     public static IEnumerator LerpValue(this IEnumerator baseEnum, System.Action<float> function, float from, float to, float duration)
     {
         yield return baseEnum;

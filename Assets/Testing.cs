@@ -2,28 +2,51 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Testing : MonoBehaviour {
-    private List<Vector3> list = new List<Vector3>(100000);
-    public bool kill = true;
+public class Testing : MonoBehaviour
+{
+    public Texture2D texture;
+    Routine routine;
+    public float restriction = 10;
+    int i = 0;
 
     private void Awake()
     {
-        Corouter.Instance.StartCoroutine(Corouter.Base.Then(() => print("start")).Then(Count).Then(() => print("Finished")),"OtherGroup");
-        Corouter.Instance.SetGroupHandle(()=>this,"OtherGroup");
+        texture = new Texture2D(512, 512);
+        routine = new Routine(Starting)
+            .Repeat(CalculateTexture, 512, restriction)
+            .Then(() => print("done instancing"))
+            .Then(()=>routine.Reset());
     }
 
-    IEnumerator Count()
+    IEnumerator Starting()
     {
-        int i = 0;
-        while(i<5)
+        print("Starting");
+        yield return null;
+    }
+
+    void CalculateTexture()
+    {
+        for (int j = 0; j < 512; j++)
         {
-            Debug.Log(i);
-            i++;
-            yield return new WaitForSeconds(1);
+            texture.SetPixel(i, j, Color.red* Perlin.Noise(i,j));
+        }
+        texture.Apply();
+        i++;
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            routine.Start();
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            routine.Reset();
+        }
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            routine.Stop();
         }
     }
-
-    void Update () {
-
-	}
 }

@@ -14,23 +14,23 @@ public class SlicingVSNormal : MonoBehaviour {
 	
 
 	void Update () {
-		if(Input.GetKeyDown(KeyCode.S))
+		/*if(Input.GetKeyDown(KeyCode.S))
         {
             Corouter.Instance.StartCoroutine(
                 Corouter.Base
                 .While(()=>true,loop)
                 );
-        }
+        }*/
     }
 
-    IEnumerator loop()
+    /*IEnumerator loop()
     {
         return Corouter.Base
                 .Repeat(() => InstanciateSphere(), howMany, 100)
                 .Then(() => InstanciateShpereLoop())
                 .Wait(1)
                 .Then(() => Clear());
-    }
+    }*/
 
     void InstanciateSphere()
     {
