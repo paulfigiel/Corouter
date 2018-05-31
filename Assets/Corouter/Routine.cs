@@ -3,86 +3,41 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Routine {
-    private System.Func<IEnumerator> _enumerator;
-    public System.Func<IEnumerator> Enumerator { get { return _enumerator; } }
-    public Routine(System.Func<IEnumerator> enumerator)
+    IEnumerator currentEnumerator;
+    Queue<IEnumerator> enumerators = new Queue<IEnumerator>();
+
+    bool MoveNext()
     {
-        _enumerator = enumerator;
-        Corouter.Instance.RegisterRoutine(this);
-    }
-    public void Start()
-    {
-        Corouter.Instance.StartRoutine(this);
-    }
-    public void Stop()
-    {
-        Corouter.Instance.StopRoutine(this);
-    }
-    public void Reset()
-    {
-        Stop();
-        Start();
-    }
-    public Routine Then(System.Func<IEnumerator> enumerator)
-    {
-        return new Routine(()=>Then(_enumerator(),enumerator));
-    }
-    public Routine Then(System.Action action)
-    {
-        return new Routine(() => Then(_enumerator(), action));
-    }
-    public Routine Repeat(System.Action action, int howMany, float maxTimeAllowedPerFrame = 1)
-    {
-        return new Routine(()=>Repeat(_enumerator(),action,howMany,maxTimeAllowedPerFrame));
-    }
-    private IEnumerator Then(IEnumerator baseEnum, System.Func<IEnumerator> enumerator)
-    {
-        yield return baseEnum;
-        yield return enumerator();
-    }
-    private IEnumerator Then<T>(IEnumerator baseEnum, System.Func<T, IEnumerator> enumerator, T obj1)
-    {
-        yield return baseEnum;
-        yield return enumerator(obj1);
-    }
-    private IEnumerator Then(IEnumerator baseEnum, System.Action action)
-    {
-        yield return baseEnum;
-        action();
-    }
-    private IEnumerator Repeat(IEnumerator baseEnum, System.Action action, int howMany, float maxTimeAllowedPerFrame = 1)
-    {
-        yield return baseEnum;
-        maxTimeAllowedPerFrame /= 1000;
-        int i = 0;
-        while (i < howMany)
+        bool b = currentEnumerator.MoveNext();
+        if (b)
         {
-            float startedTime = Time.realtimeSinceStartup;
-            while (Time.realtimeSinceStartup-startedTime < maxTimeAllowedPerFrame && i < howMany)
+            // Skipping a frame when it's null
+            if (currentEnumerator.Current == null)
             {
-                action();
-                i++;
+
             }
-            if (i != howMany)
-                yield return null;
+            else if(currentEnumerator.Current is Result)
+            {
+
+            }
+            else if (currentEnumerator.Current is IEnumerator)
+            {
+                enumerators.Enqueue(currentEnumerator);
+                currentEnumerator = currentEnumerator.Current as IEnumerator;
+                currentEnumerator.MoveNext();
+            }
+            return true;
         }
-    }
-    private IEnumerator Repeat(IEnumerator baseEnum, System.Action action, int howMany, int iterationPerFrame = 1)
-    {
-        yield return baseEnum;
-        int i = 0, j = 0;
-        iterationPerFrame = Mathf.Min(iterationPerFrame, howMany);
-        while (i < howMany)
+        else
         {
-            while (j < iterationPerFrame && i < howMany)
+            if (enumerators.Count > 0)
             {
-                action();
-                j++;
-                i++;
+                currentEnumerator = enumerators.Dequeue();
+                currentEnumerator.MoveNext();
+                return true;
             }
-            j = 0;
-            if (i != howMany)
-                yield return null;
+            else
+                return false;
         }
     }
 }

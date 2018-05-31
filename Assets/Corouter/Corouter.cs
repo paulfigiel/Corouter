@@ -16,23 +16,23 @@ public class Corouter : Singleton<Corouter>
 
     public void StartRoutine(Routine routine)
     {
-        routines.Remove(routine);
+        /*routines.Remove(routine);
         runningRoutines.Add(routine);
         Coroutine c = StartCoroutine(routine.Enumerator());
         if (!routineToCoroutine.ContainsKey(routine))
             routineToCoroutine.Add(routine, c);
         else
-            routineToCoroutine[routine] = c;
+            routineToCoroutine[routine] = c;*/
     }
 
     public void StopRoutine(Routine routine)
     {
-        if (!runningRoutines.Contains(routine))
+        /*if (!runningRoutines.Contains(routine))
             return;
         runningRoutines.Remove(routine);
         routines.Add(routine);
         if (routineToCoroutine.ContainsKey(routine))
-            StopCoroutine(routineToCoroutine[routine]);
+            StopCoroutine(routineToCoroutine[routine]);*/
     }
 
     private void Update()

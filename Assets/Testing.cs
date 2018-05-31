@@ -11,11 +11,7 @@ public class Testing : MonoBehaviour
 
     private void Awake()
     {
-        texture = new Texture2D(512, 512);
-        routine = new Routine(Starting)
-            .Repeat(CalculateTexture, 512, restriction)
-            .Then(() => print("done instancing"))
-            .Then(()=>routine.Reset());
+
     }
 
     IEnumerator Starting()
@@ -38,15 +34,15 @@ public class Testing : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.S))
         {
-            routine.Start();
+            //routine.Start();
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
-            routine.Reset();
+            //routine.Reset();
         }
         if (Input.GetKeyDown(KeyCode.A))
         {
-            routine.Stop();
+            //routine.Stop();
         }
     }
 }
