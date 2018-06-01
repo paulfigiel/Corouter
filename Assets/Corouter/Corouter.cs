@@ -14,30 +14,29 @@ public class Corouter : Singleton<Corouter>
         routines.Add(routine);
     }
 
-    public void StartRoutine(Routine routine)
+    public void RegisterRoutineDestruction(Routine routine)
     {
-        /*routines.Remove(routine);
-        runningRoutines.Add(routine);
-        Coroutine c = StartCoroutine(routine.Enumerator());
-        if (!routineToCoroutine.ContainsKey(routine))
-            routineToCoroutine.Add(routine, c);
-        else
-            routineToCoroutine[routine] = c;*/
-    }
-
-    public void StopRoutine(Routine routine)
-    {
-        /*if (!runningRoutines.Contains(routine))
-            return;
-        runningRoutines.Remove(routine);
-        routines.Add(routine);
-        if (routineToCoroutine.ContainsKey(routine))
-            StopCoroutine(routineToCoroutine[routine]);*/
+        print("Routine destroyed");
+        routines.Remove(routine);
     }
 
     private void Update()
     {
+        for (int i = 0; i < routines.Count; i++)
+        {
+            if(routines[i].Running)
+                routines[i].Tick();
+        }
+    }
 
+    private void LateUpdate()
+    {
+        
+    }
+
+    private void FixedUpdate()
+    {
+        
     }
 
     protected override void Awake()

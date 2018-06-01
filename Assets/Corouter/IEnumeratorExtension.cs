@@ -9,6 +9,11 @@ public static class IEnumeratorExtension
     {
         yield return null;
     }
+    public static IEnumerator Then(this IEnumerator baseEnum,System.Func<IEnumerator> otherEnum)
+    {
+        yield return baseEnum;
+        yield return otherEnum;
+    }
     public static IEnumerator LerpValue(this IEnumerator baseEnum, System.Action<float> function, float from, float to, float duration)
     {
         yield return baseEnum;

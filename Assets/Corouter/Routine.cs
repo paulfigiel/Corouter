@@ -1,12 +1,49 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Routine {
+    System.Func<IEnumerator> enumeratorFunc;
     IEnumerator currentEnumerator;
     Queue<IEnumerator> enumerators = new Queue<IEnumerator>();
+    private bool running = false;
+    public bool Running
+    {
+        get
+        {
+            return running;
+        }
+    }
 
-    bool MoveNext()
+    public Routine(System.Func<IEnumerator> enumerator)
+    {
+        enumeratorFunc = enumerator;
+        currentEnumerator = enumeratorFunc();
+        Corouter.Instance.RegisterRoutine(this);
+    }
+
+    public Routine(params Func<IEnumerator>[] functions)
+    {
+
+    }
+
+    public void Start()
+    {
+        running = true;
+    }
+
+    public void Stop()
+    {
+        running = false;
+    }
+
+    public void Reset()
+    {
+        currentEnumerator = enumeratorFunc();
+    }
+
+    public bool Tick()
     {
         bool b = currentEnumerator.MoveNext();
         if (b)
@@ -37,7 +74,15 @@ public class Routine {
                 return true;
             }
             else
+            {
+                running = false;
                 return false;
+            }
         }
+    }
+
+    ~Routine()
+    {
+        Corouter.Instance.RegisterRoutineDestruction(this);
     }
 }
