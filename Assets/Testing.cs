@@ -7,18 +7,29 @@ public class Testing : MonoBehaviour
     public Texture2D texture;
     Routine routine;
     public float restriction = 10;
-    float i = 0;
+    int i = 0;
     Vector3 iVec = new Vector3();
-    Quaternion initialRotation;
 
     private void Awake()
     {
-        for (int i = 0; i < 64000; i++)
+        for (int i = 0; i < 1000; i++)
         {
-            routine = new Routine(ToBuilder);
-            routine.Start();
-            initialRotation = transform.rotation;
+        Routine routine = new Routine(true,
+            () => Timed(transform.position, Linear.LerpVector, (v) => transform.position = v, Random.insideUnitSphere, 1))
+            .Then(() => Timed(transform.position, Linear.LerpVector, (v) => transform.position = v, Random.insideUnitSphere, 1))
+            .Then(() => Timed(transform.position, Linear.LerpVector, (v) => transform.position = v, Random.insideUnitSphere, 1))
+            .Then(() => Timed(transform.position, Linear.LerpVector, (v) => transform.position = v, Random.insideUnitSphere, 1));
+        routine.Start();
+
         }
+        routine = new Routine(false, ToBuilder);
+        routine.Start();
+    }
+
+    IEnumerator Restarrt()
+    {
+        routine.Reset();
+        yield return null;
     }
 
     private void Update()
@@ -35,6 +46,10 @@ public class Testing : MonoBehaviour
         {
             routine.Reset();
         }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            routine.Then(Restarrt);
+        }
     }
 
     IEnumerator Starting()
@@ -45,7 +60,7 @@ public class Testing : MonoBehaviour
 
     IEnumerator ToBuilder()
     {
-        return Timed(Quaternion.identity, LerpQuaternion, (m) => transform.rotation = m, Quaternion.Euler(180, 180, 90), 10);
+        return Timed(Quaternion.identity, Linear.LerpQuaternion, (m) => transform.rotation = m, Quaternion.Euler(180, 180, 90), 3);
     }
 
     IEnumerator Timed<T>(T init, System.Func<T, T, float, T> lerpFunction, System.Action<T> assign, T endvalue, float duration)
@@ -64,37 +79,5 @@ public class Testing : MonoBehaviour
             buff += Time.deltaTime / duration;
         }
         assign(endvalue);
-    }
-
-    System.Func<float, float, float, float> Lerp
-    {
-        get
-        {
-            return (v0, v1, t) => (1 - t) * v0 + t * v1;
-        }
-    }
-
-    System.Func<double, double, float, double> LerpDouble
-    {
-        get
-        {
-            return (v0, v1, t) => (1 - t) * v0 + t * v1;
-        }
-    }
-
-    System.Func<Vector3, Vector3, float, Vector3> LerpVector
-    {
-        get
-        {
-            return (v0, v1, t) => new Vector3(Lerp(v0.x, v1.x, t), Lerp(v0.y, v1.y, t), Lerp(v0.z, v1.z, t));
-        }
-    }
-
-    System.Func<Quaternion, Quaternion, float, Quaternion> LerpQuaternion
-    {
-        get
-        {
-            return (v0, v1, t) => new Quaternion((1 - t) * v0.x + t * v1.x, (1 - t) * v0.y + t * v1.y, (1 - t) * v0.z + t * v1.z, (1 - t) * v0.w + t * v1.w);
-        }
     }
 }

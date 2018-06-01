@@ -5,38 +5,45 @@ using UnityEngine;
 
 public class Corouter : Singleton<Corouter>
 {
-    private List<Routine> routines = new List<Routine>();
     private List<Routine> runningRoutines = new List<Routine>();
-    private Dictionary<Routine, Coroutine> routineToCoroutine = new Dictionary<Routine, Coroutine>();
+
+    public int RunningRoutine
+    {
+        get
+        {
+            return runningRoutines.Count;
+        }
+    }
 
     public void RegisterRoutine(Routine routine)
     {
-        routines.Add(routine);
+        runningRoutines.Add(routine);
     }
 
     public void RegisterRoutineDestruction(Routine routine)
     {
         print("Routine destroyed");
-        routines.Remove(routine);
+        runningRoutines.Remove(routine);
     }
 
     private void Update()
     {
-        for (int i = 0; i < routines.Count; i++)
+        for (int i = 0; i < runningRoutines.Count; i++)
         {
-            if(routines[i].Running)
-                routines[i].Tick();
+            if (runningRoutines[i].Running)
+                runningRoutines[i].Tick();
         }
+        runningRoutines.RemoveAll((r) => r.DestroyAfterFinished && !r.Running);
     }
 
     private void LateUpdate()
     {
-        
+
     }
 
     private void FixedUpdate()
     {
-        
+
     }
 
     protected override void Awake()

@@ -3,44 +3,51 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Routine {
-    System.Func<IEnumerator> enumeratorFunc;
+public class Routine
+{
+    List<System.Func<IEnumerator>> enumeratorFuncs;
+    int enumeratorFuncIndex = 0;
     IEnumerator currentEnumerator;
     Queue<IEnumerator> enumerators = new Queue<IEnumerator>();
-    private bool running = false;
+    private bool _running = false;
+    private bool _destroyAfterFinished = true;
+    public bool DestroyAfterFinished
+    {
+        get
+        {
+            return _destroyAfterFinished;
+        }
+    }
     public bool Running
     {
         get
         {
-            return running;
+            return _running;
         }
     }
 
-    public Routine(System.Func<IEnumerator> enumerator)
+    public Routine(bool destroyAfterFinished = true, params Func<IEnumerator>[] enumerators)
     {
-        enumeratorFunc = enumerator;
-        currentEnumerator = enumeratorFunc();
-        Corouter.Instance.RegisterRoutine(this);
-    }
-
-    public Routine(params Func<IEnumerator>[] functions)
-    {
-
+        _destroyAfterFinished = destroyAfterFinished;
+        enumeratorFuncs = new List<Func<IEnumerator>>(enumerators);
+        currentEnumerator = enumeratorFuncs[0]();
     }
 
     public void Start()
     {
-        running = true;
+        Corouter.Instance.RegisterRoutine(this);
+        _running = true;
     }
 
     public void Stop()
     {
-        running = false;
+        _running = false;
     }
 
     public void Reset()
     {
-        currentEnumerator = enumeratorFunc();
+        enumeratorFuncIndex = 0;
+        currentEnumerator = enumeratorFuncs[0]();
     }
 
     public bool Tick()
@@ -53,7 +60,7 @@ public class Routine {
             {
 
             }
-            else if(currentEnumerator.Current is Result)
+            else if (currentEnumerator.Current is Result)
             {
 
             }
@@ -73,16 +80,23 @@ public class Routine {
                 currentEnumerator.MoveNext();
                 return true;
             }
+            else if (enumeratorFuncIndex + 1 < enumeratorFuncs.Count)
+            {
+                currentEnumerator = enumeratorFuncs[enumeratorFuncIndex + 1]();
+                currentEnumerator.MoveNext();
+                enumeratorFuncIndex++;
+                return true;
+            }
             else
             {
-                running = false;
+                _running = false;
                 return false;
             }
         }
     }
-
-    ~Routine()
+    public Routine Then(Func<IEnumerator> other)
     {
-        Corouter.Instance.RegisterRoutineDestruction(this);
+        enumeratorFuncs.Add(other);
+        return this;
     }
 }
