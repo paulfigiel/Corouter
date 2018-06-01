@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -20,12 +21,6 @@ public class Corouter : Singleton<Corouter>
         runningRoutines.Add(routine);
     }
 
-    public void RegisterRoutineDestruction(Routine routine)
-    {
-        print("Routine destroyed");
-        runningRoutines.Remove(routine);
-    }
-
     private void Update()
     {
         for (int i = 0; i < runningRoutines.Count; i++)
@@ -33,7 +28,7 @@ public class Corouter : Singleton<Corouter>
             if (runningRoutines[i].Running)
                 runningRoutines[i].Tick();
         }
-        runningRoutines.RemoveAll((r) => r.DestroyAfterFinished && !r.Running);
+        runningRoutines.RemoveAll((r) => !r.handle.IsAlive && !r.Running);
     }
 
     private void LateUpdate()

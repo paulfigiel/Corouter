@@ -10,14 +10,7 @@ public class Routine
     IEnumerator currentEnumerator;
     Queue<IEnumerator> enumerators = new Queue<IEnumerator>();
     private bool _running = false;
-    private bool _destroyAfterFinished = true;
-    public bool DestroyAfterFinished
-    {
-        get
-        {
-            return _destroyAfterFinished;
-        }
-    }
+    public WeakReference handle;
     public bool Running
     {
         get
@@ -26,17 +19,19 @@ public class Routine
         }
     }
 
-    public Routine(bool destroyAfterFinished = true, params Func<IEnumerator>[] enumerators)
+    public Routine(params Func<IEnumerator>[] enumerators)
     {
-        _destroyAfterFinished = destroyAfterFinished;
         enumeratorFuncs = new List<Func<IEnumerator>>(enumerators);
         currentEnumerator = enumeratorFuncs[0]();
     }
 
-    public void Start()
+    public RoutineHandle Start()
     {
         Corouter.Instance.RegisterRoutine(this);
         _running = true;
+        RoutineHandle routineHandle = new RoutineHandle();
+        handle = new WeakReference(routineHandle);
+        return routineHandle;
     }
 
     public void Stop()
@@ -98,5 +93,14 @@ public class Routine
     {
         enumeratorFuncs.Add(other);
         return this;
+    }
+}
+public class RoutineHandle
+{
+    public RoutineHandle()
+    {
+    }
+    ~RoutineHandle()
+    {
     }
 }
