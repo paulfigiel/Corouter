@@ -23,12 +23,11 @@ public class Corouter : Singleton<Corouter>
 
     private void Update()
     {
+        runningRoutines.RemoveAll((r) => !r.Running);
         for (int i = 0; i < runningRoutines.Count; i++)
         {
-            if (runningRoutines[i].Running)
-                runningRoutines[i].Tick();
+            runningRoutines[i].Tick();
         }
-        runningRoutines.RemoveAll((r) => !r.handle.IsAlive && !r.Running);
     }
 
     private void LateUpdate()

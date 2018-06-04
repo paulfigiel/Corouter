@@ -10,7 +10,6 @@ public class Routine
     IEnumerator currentEnumerator;
     Queue<IEnumerator> enumerators = new Queue<IEnumerator>();
     private bool _running = false;
-    public WeakReference handle;
     public bool Running
     {
         get
@@ -25,13 +24,10 @@ public class Routine
         currentEnumerator = enumeratorFuncs[0]();
     }
 
-    public RoutineHandle Start()
+    public void Start()
     {
-        Corouter.Instance.RegisterRoutine(this);
         _running = true;
-        RoutineHandle routineHandle = new RoutineHandle();
-        handle = new WeakReference(routineHandle);
-        return routineHandle;
+        Corouter.Instance.RegisterRoutine(this);
     }
 
     public void Stop()
@@ -93,14 +89,5 @@ public class Routine
     {
         enumeratorFuncs.Add(other);
         return this;
-    }
-}
-public class RoutineHandle
-{
-    public RoutineHandle()
-    {
-    }
-    ~RoutineHandle()
-    {
     }
 }
