@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class Testing : MonoBehaviour
@@ -7,6 +8,8 @@ public class Testing : MonoBehaviour
     Routine routine;
     public GameObject prefab;
     private List<GameObject> InstancedPrefabs = new List<GameObject>();
+    private object _lockObject = new object();
+    private float[] hugeArray = new float[64000*100];
 
     private void Awake()
     {
@@ -44,17 +47,32 @@ public class Testing : MonoBehaviour
             }*/
             routine = new Routine(
                 () => Actions.TimedList((i) => InstancedPrefabs[i].transform.position, Linear.LerpVector, (v, index) => InstancedPrefabs[index].transform.position = v, (i) => InstancedPrefabs[i].transform.position + Random.insideUnitSphere * 100, 0, 64000, 1));
-            routine.Then(()=>Actions.SliceAction(InstancedPrefabs, (g) => Destroy(g), 64010));
+            routine.Then(() => Actions.SliceAction(InstancedPrefabs, (g) => Destroy(g), 64010));
             routine.Then(Starting);
 
             routine.Start();
         }
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            Routine threaded = new Routine(() => Actions.Threaded(Test,_lockObject));
+            threaded.Start();
+        }
         print(Corouter.Instance.RunningRoutine);
+    }
+
+    void Test()
+    {
+        Debug.Log("bug");
+        for (int i = 0; i < hugeArray.Length; i++)
+        {
+            hugeArray[i] = i;
+        }
+        print("Array : "+hugeArray[hugeArray.Length-1]);
     }
 
     IEnumerator Starting()
     {
-        print(InstancedPrefabs.FindAll((g)=>g).Count);
+        print(InstancedPrefabs.FindAll((g) => g).Count);
         yield return null;
     }
 }

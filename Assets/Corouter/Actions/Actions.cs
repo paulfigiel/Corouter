@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public static partial class Actions
@@ -57,12 +58,30 @@ public static partial class Actions
         while (i < collection.Count)
         {
             iteration = 0;
-            while (iteration<iterationPerFrame && i<collection.Count)
+            while (iteration < iterationPerFrame && i < collection.Count)
             {
                 action(collection[i]);
                 i++;
                 iteration++;
             }
+            yield return null;
+        }
+    }
+
+    public static IEnumerator Threaded(System.Action action, object lockobject = null)
+    {
+        Thread t = new Thread(
+            () =>
+            {
+                lock (lockobject)
+                {
+                    action();
+                }
+            }
+            );
+        t.Start();
+        while (t.IsAlive)
+        {
             yield return null;
         }
     }
