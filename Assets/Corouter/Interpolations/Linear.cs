@@ -20,12 +20,9 @@ public static class Linear {
         }
     }
 
-    public static System.Func<Vector3, Vector3, float, Vector3> LerpVector
+    public static System.Func<Vector3, Vector3, float, Vector3> LerpVector(System.Func<float,float> TimeMapping)
     {
-        get
-        {
-            return (v0, v1, t) => new Vector3(Lerp(v0.x, v1.x, t), Lerp(v0.y, v1.y, t), Lerp(v0.z, v1.z, t));
-        }
+        return (v0, v1, t) => new Vector3(Lerp(v0.x, v1.x, TimeMapping(t)), Lerp(v0.y, v1.y, TimeMapping(t)), Lerp(v0.z, v1.z, TimeMapping(t)));
     }
 
     public static System.Func<Quaternion, Quaternion, float, Quaternion> LerpQuaternion

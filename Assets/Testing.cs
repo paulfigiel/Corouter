@@ -9,11 +9,11 @@ public class Testing : MonoBehaviour
     public GameObject prefab;
     private List<GameObject> InstancedPrefabs = new List<GameObject>();
     private object _lockObject = new object();
-    private float[] hugeArray = new float[64000*100];
+    private float[] hugeArray = new float[1000*100];
 
     private void Awake()
     {
-        for (int i = 0; i <= 64000; i++)
+        for (int i = 0; i <= 1000; i++)
         {
             GameObject g = Instantiate(prefab);
             g.transform.position = Random.insideUnitSphere * 100;
@@ -46,9 +46,7 @@ public class Testing : MonoBehaviour
 
             }*/
             routine = new Routine(
-                () => Actions.TimedList((i) => InstancedPrefabs[i].transform.position, Linear.LerpVector, (v, index) => InstancedPrefabs[index].transform.position = v, (i) => InstancedPrefabs[i].transform.position + Random.insideUnitSphere * 100, 0, 64000, 1));
-            routine.Then(() => Actions.SliceAction(InstancedPrefabs, (g) => Destroy(g), 64010));
-            routine.Then(Starting);
+                () => Actions.TimedList((i) => InstancedPrefabs[i].transform.position, Linear.LerpVector((t)=>t*t), (v, index) => InstancedPrefabs[index].transform.position = v, (i) => InstancedPrefabs[i].transform.position + Random.insideUnitSphere * 100, 0, 1000, 10));
 
             routine.Start();
         }
