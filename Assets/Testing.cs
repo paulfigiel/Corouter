@@ -46,8 +46,9 @@ public class Testing : MonoBehaviour
 
             }*/
             routine = new Routine(
-                () => Actions.TimedList((i) => InstancedPrefabs[i].transform.position, Linear.LerpVector((t)=>t*t), (v, index) => InstancedPrefabs[index].transform.position = v, (i) => InstancedPrefabs[i].transform.position + Random.insideUnitSphere * 100, 0, 1000, 10));
-
+                () => Actions.TimedList((i) => InstancedPrefabs[i].transform.position, Linear.LerpVector((t)=> Mathf.Pow(t, 1 / 5f)), (v, index) => InstancedPrefabs[index].transform.position = v, (i) => InstancedPrefabs[i].transform.position + Random.insideUnitSphere * 100, 0, 1000, 10));
+            //(t)=>Mathf.Pow(t,1/5f)
+            //(t)=>Mathf.Pow(t,5)
             routine.Start();
         }
         if (Input.GetKeyDown(KeyCode.T))

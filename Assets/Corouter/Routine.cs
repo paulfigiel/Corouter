@@ -47,11 +47,12 @@ public class Routine
         if (b)
         {
             // Skipping a frame when it's null
-            if (currentEnumerator.Current == null)
+            /*if (currentEnumerator.Current == null)
             {
 
             }
-            else if (currentEnumerator.Current is Result)
+            else */
+            if (currentEnumerator.Current is Result)
             {
 
             }
