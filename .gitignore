@@ -5,6 +5,7 @@ Temp/
 UnityGenerated/
 Builds/
 Library/
+obj/
 Assets/AssetStoreTools*
 *.meta
 
