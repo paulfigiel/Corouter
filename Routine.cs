@@ -1,82 +1,93 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
-public class Routine
+namespace Corouter
 {
-    List<System.Func<IEnumerator>> enumeratorFuncs;
-    int enumeratorFuncIndex = 0;
-    IEnumerator currentEnumerator;
-    Queue<IEnumerator> enumerators = new Queue<IEnumerator>();
-    private bool _running = false;
-    public bool Running
+    public class Routine : IEnumerator
     {
-        get
+        List<Func<IEnumerator>> baseEnumerators = new List<Func<IEnumerator>>();
+        int enumeratorFuncIndex = 0;
+        IEnumerator currentEnumerator;
+        Stack<IEnumerator> enumeratorStack = new Stack<IEnumerator>();
+        private bool _running = false;
+        private float unpauseTime = 0;
+        public bool Running
         {
-            return _running;
+            get
+            {
+                return _running;
+            }
         }
-    }
 
-    public Routine(params Func<IEnumerator>[] enumerators)
-    {
-        enumeratorFuncs = new List<Func<IEnumerator>>(enumerators);
-        currentEnumerator = enumeratorFuncs[0]();
-    }
+        public object Current => currentEnumerator.Current;
 
-    public void Start()
-    {
-        _running = true;
-        Corouter.Instance.RegisterRoutine(this);
-    }
-
-    public void Stop()
-    {
-        _running = false;
-    }
-
-    public void Reset()
-    {
-        enumeratorFuncIndex = 0;
-        currentEnumerator = enumeratorFuncs[0]();
-    }
-
-    public bool Tick()
-    {
-        bool b = currentEnumerator.MoveNext();
-        if (b)
+        public Routine(params Func<IEnumerator>[] enumerators)
         {
-            // Skipping a frame when it's null
-            /*if (currentEnumerator.Current == null)
+            if (enumerators.Length > 0)
             {
-
+                baseEnumerators = new List<Func<IEnumerator>>(enumerators);
+                currentEnumerator = baseEnumerators[0]();
             }
-            else */
-            if (currentEnumerator.Current is Result)
-            {
-
-            }
-            else if (currentEnumerator.Current is IEnumerator)
-            {
-                enumerators.Enqueue(currentEnumerator);
-                currentEnumerator = currentEnumerator.Current as IEnumerator;
-                currentEnumerator.MoveNext();
-            }
-            return true;
         }
-        else
+
+        public void Start()
         {
-            if (enumerators.Count > 0)
+            _running = true;
+            CorouterManager.Instance.RegisterRoutine(this);
+        }
+
+        public void Stop()
+        {
+            _running = false;
+        }
+
+        public void Reset()
+        {
+            enumeratorFuncIndex = 0;
+            currentEnumerator = baseEnumerators[0]();
+        }
+
+        public void Reboot()
+        {
+            Reset();
+            Start();
+        }
+
+        public bool Tick()
+        {
+            if (Time.time < unpauseTime)
+                return true;
+            bool currentHasNext = currentEnumerator != null && currentEnumerator.MoveNext();
+            if (currentHasNext)
             {
-                currentEnumerator = enumerators.Dequeue();
-                currentEnumerator.MoveNext();
+                switch (currentEnumerator.Current)
+                {
+                    case IEnumerator e:
+                        enumeratorStack.Push(currentEnumerator);
+                        currentEnumerator = e;
+                        break;
+                    case float f:
+                        unpauseTime = Time.time + f;
+                        break;
+                    case null:
+                        break;
+                    default:
+                        break;
+                }
                 return true;
             }
-            else if (enumeratorFuncIndex + 1 < enumeratorFuncs.Count)
+            else if (enumeratorStack.Count > 0)
             {
-                currentEnumerator = enumeratorFuncs[enumeratorFuncIndex + 1]();
-                currentEnumerator.MoveNext();
+                currentEnumerator = enumeratorStack.Pop();
+                return true;
+            }
+            else if (enumeratorFuncIndex + 1 < baseEnumerators.Count)
+            {
                 enumeratorFuncIndex++;
+                currentEnumerator = baseEnumerators[enumeratorFuncIndex]();
                 return true;
             }
             else
@@ -85,10 +96,109 @@ public class Routine
                 return false;
             }
         }
-    }
-    public Routine Then(Func<IEnumerator> other)
-    {
-        enumeratorFuncs.Add(other);
-        return this;
+        #region Fluent API
+        public Routine Do(Func<IEnumerator> other)
+        {
+            baseEnumerators.Add(other);
+            return this;
+        }
+        public Routine Do(System.Action action)
+        {
+            baseEnumerators.Add(() => { action(); return null; });
+            return this;
+        }
+        public Routine If(System.Func<bool> condition)
+        {
+            baseEnumerators.Add(() => IfEnumerator(condition));
+            return this;
+        }
+        public Routine While(System.Func<bool> condition, Func<IEnumerator> doThat)
+        {
+            baseEnumerators.Add(() => WhileEnumerator(condition, doThat));
+            return this;
+        }
+        public Routine While(System.Func<bool> condition, System.Action doThat)
+        {
+            baseEnumerators.Add(() => WhileEnumerator(condition, doThat));
+            return this;
+        }
+        public Routine Map<T>(IEnumerable<T> list, System.Action<T> action)
+        {
+            baseEnumerators.Add(() => MapEnumerator(list, action));
+            return this;
+        }
+        public Routine InsideThread(Action action, object lockObject = null)
+        {
+            baseEnumerators.Add(() => ThreadedEnumerator(action, lockObject));
+            return this;
+        }
+        public Routine Wait(float duration)
+        {
+            baseEnumerators.Add(() => WaitEnumerator(duration));
+            return this;
+        }
+        #endregion
+        #region IEnumerator Definitions
+        private IEnumerator IfEnumerator(System.Func<bool> condition)
+        {
+            while (!condition())
+                yield return null;
+        }
+        private IEnumerator WhileEnumerator(System.Func<bool> condition, Func<IEnumerator> doThat)
+        {
+            while (condition())
+            {
+                yield return doThat;
+            }
+        }
+        private IEnumerator WhileEnumerator(System.Func<bool> condition, System.Action doThat)
+        {
+            while (condition())
+            {
+                doThat();
+                yield return null;
+            }
+        }
+        private IEnumerator MapEnumerator<T>(IEnumerable<T> list, System.Action<T> action)
+        {
+            foreach (var item in list)
+            {
+                action(item);
+                yield return null;
+            }
+        }
+        private IEnumerator ThreadedEnumerator(System.Action action, object lockobject = null)
+        {
+            if (lockobject == null)
+                lockobject = this;
+            Thread t = new Thread(
+                () =>
+                {
+                    lock (lockobject)
+                    {
+                        action();
+                    }
+                }
+                );
+            t.Start();
+            while (t.IsAlive)
+            {
+                yield return null;
+            }
+        }
+        private IEnumerator WaitEnumerator(float duration)
+        {
+            float startingTime = Time.time;
+            while (Time.time - startingTime < duration)
+            {
+                yield return null;
+            }
+        }
+
+        public bool MoveNext()
+        {
+            return Tick();
+        }
+        #endregion
     }
 }
